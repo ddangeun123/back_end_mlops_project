@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from Database.db_manager import db_Connection
 
 app = Blueprint("total", __name__)
 
@@ -30,10 +31,6 @@ def Search(query:str, market:str = 'TOTAL'):
     yester_day_price = history_data[query]['close']
     return (yester_day_price < estimated_price), estimated_price
 
-def Search_Market(query:str):
-    # 회사정보 테이블에서 마켓정보 가져오기
-    return 'NASDAQ'
-
 def Print_test(data):
     if data['predict_bool']:
         message = '오를거에요'
@@ -62,8 +59,76 @@ def search_total():
 
 @app.route('/search/history', methods=['GET'])
 def search_history():
-    query = request.args.get('query', '')
-    return history_data[query]
+    q = request.args.get('query', '')
+    market = request.args.get('market', 'TOTAL')
+    if market=='TOTAL':
+        market = Select_Market(symbol=q)
+    data = DB_GetHistory(q=q, market=market)
+    json_data = jsonify(data)
+    print(json_data)
+    return json_data
+
+def DB_GetHistory(q:str, market:str):
+    try:
+        if market == 'nyse':
+            query = """SELECT
+            TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date,
+            company_code AS symbol,
+            ROUND(open, 2) AS open_price,
+            ROUND(high, 2) AS high_price,
+            ROUND(low, 2) AS low_price,
+            ROUND(close, 2) AS close_price,
+            volume
+            FROM nyse WHERE company_code = %s 
+            ORDER BY date DESC
+            limit 20;"""
+        elif market == 'nasdaq':
+            query = """SELECT
+            TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date,
+            company_code AS symbol,
+            ROUND(open, 2) AS open_price,
+            ROUND(high, 2) AS high_price,
+            ROUND(low, 2) AS low_price,
+            ROUND(close, 2) AS close_price,
+            volume AS volume
+            FROM nasdaq WHERE company_code = %s
+            ORDER BY date DESC
+            limit 20;"""
+        elif market == 'amex':
+            query = """SELECT
+            TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date,
+            company_code AS symbol,
+            ROUND(open, 2) AS open_price,
+            ROUND(high, 2) AS high_price,
+            ROUND(low, 2) AS low_price,
+            ROUND(close, 2) AS close_price,
+            volume AS volume
+            FROM amex WHERE company_code = %s
+            ORDER BY date DESC
+            limit 20;"""
+        conn = db_Connection()
+        cursor = conn.cursor()
+        cursor.execute(query, (q,))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    except:
+        raise Exception('검색 결과를 찾을 수 없습니다.')
+
+    return result
+
+def Select_Market(symbol:str):
+    try:
+        query = "SELECT market FROM company WHERE code = %s"
+        conn = db_Connection()
+        cursor = conn.cursor()
+        cursor.execute(query, (symbol,))
+        result = cursor.fetchall()[0][0]
+        cursor.close()
+        conn.close()
+    except:
+        raise Exception('Cannot Find company by symbol!')
+    return result
 
 if __name__=='__main__':
     predict_bool, predict_price = Search(query='AAPL')
