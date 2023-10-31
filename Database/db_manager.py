@@ -8,13 +8,14 @@ class Config:
     DB_HOST = os.environ.get('DB_HOST')
     DB_PORT = os.environ.get('DB_PORT')
 
+config = Config()
 # 연결 정보
 db_params = {
-    'dbname': 'test01',
-    'user': 'manager',
-    'password': 'tPZm7M7gAC8UKeNAf3yf',
-    'host': '43.201.204.226',  # 예: 'localhost' 또는 IP 주소
-    'port': '5432'  # 예: '5432'
+    'dbname': config.DB_NAME,
+    'user': config.DB_USER,
+    'password': config.DB_PASSWORD,
+    'host': config.DB_HOST,  # 예: 'localhost' 또는 IP 주소
+    'port': config.DB_PORT  # 예: '5432'
 }
 # testDB
 # db_params = {
@@ -25,11 +26,6 @@ db_params = {
 #     'port': '5432'  # 예: '5432'
 # }
 
-redis_params = {
-    'host':'43.201.204.226',
-    'port':6379,
-    'db':0
-}
 def db_Connection():
     return psycopg2.connect(**db_params)
 
@@ -44,6 +40,7 @@ def execute_query(query:str):
 
 if __name__=='__main__':
     # PostgreSQL 데이터베이스에 연결
+    print(db_params)
     conn = db_Connection()
     print(conn)
     conn.close()

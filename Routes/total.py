@@ -7,6 +7,28 @@ from datetime import datetime
 
 app = Blueprint("total", __name__)
 
+
+
+@app.route('/search/predict', methods=['GET'])
+def search_predict():
+    # 요청에 있는 검색어 가져오기
+    symbol = request.args.get('query', '')
+    data = Judge_Price(symbol=symbol)
+    
+    return data
+
+@app.route('/search/history', methods=['GET'])
+def search_history():
+    q = request.args.get('query', '')
+    market = request.args.get('market', 'TOTAL')
+    try:
+        data = Get_History_Redis(symbol=q)
+        return data
+    except ValueError as e:
+        data = Get_History_Psql(symbol=q, market=market)
+        Insert_History_Redis(symbol=q, data=data)
+        return jsonify(data)
+    
 def Get_Predict_DB(symbol:str):
     # current_Date = datetime.date()
     query = "SELECT close FROM pred WHERE symbol = %s AND date > %s LIMIT 1"
@@ -22,32 +44,38 @@ def Get_Predict_DB(symbol:str):
     except Exception as e:
         print(f'Get_Predict_DB Error : {e}')
         return None
-
-@app.route('/search/predict', methods=['GET'])
-def search_predict():
-    # 요청에 있는 검색어 가져오기
-    query = request.args.get('query', '')
-    print(f'query: {query}')
-    # DB에서 검색결과 가져오기
-    predict_price = Get_Predict_DB(symbol=query)
-    result = {
-        'query':query,
-        'predict_bool':predict_bool,
-        'predict_price':predict_price,
-    }
+def Get_Price_DB(symbol:str):
+    market = Select_Market(symbol=symbol)
+    query = f"SELECT close FROM {market} WHERE company_code = %s AND date <= %s LIMIT 1"
+    conn = db_Connection()
+    cursor = conn.cursor()
+    cursor.execute(query, (symbol, '2023-10-20'))
+    result = cursor.fetchall()[0][0]
     return result
+    
+def Judge_Price(symbol:str):
+    predict_price = Get_Predict_DB(symbol=symbol)
+    last_price = Get_Price_DB(symbol=symbol)
+    if predict_price >= last_price:
+        message = f'내일 {symbol} 가격은 오를 거에요! 예측 가격은 {predict_price}에요.'
+    else:
+        message = f'내일 {symbol} 가격은 내릴 거에요.. 예측 가격은 {predict_price}에요.'
+    percentage = Calcurate_Percentage(last_price, predict_price)
+    data = {
+        'symbol':symbol,
+        'message':message,
+        'percentage':percentage,
+    }
+    return data
 
-@app.route('/search/history', methods=['GET'])
-def search_history():
-    q = request.args.get('query', '')
-    market = request.args.get('market', 'TOTAL')
-    try:
-        data = Get_History_Redis(symbol=q)
-        return data
-    except ValueError as e:
-        data = Get_History_Psql(symbol=q, market=market)
-        Insert_History_Redis(symbol=q, data=data)
-        return jsonify(data)
+def Calcurate_Percentage(num1, num2):
+    if num1 == 0:
+        if num2 == 0:
+            return 0
+        else:
+            return float('inf')
+    percentage = ((num2-num1)/num1) * 100
+    return percentage
     
 
 def Query_History(symbol:str, market:str):
