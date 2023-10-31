@@ -16,6 +16,14 @@ db_params = {
     'host': '43.201.204.226',  # 예: 'localhost' 또는 IP 주소
     'port': '5432'  # 예: '5432'
 }
+# testDB
+# db_params = {
+#     'dbname': 'test01',
+#     'user': 'manager',
+#     'password': 'qwer1234',
+#     'host': '127.0.0.1',  # 예: 'localhost' 또는 IP 주소
+#     'port': '5432'  # 예: '5432'
+# }
 
 redis_params = {
     'host':'43.201.204.226',
