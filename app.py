@@ -10,8 +10,8 @@ app.register_blueprint(auth.app)
 
 # 외부 api호출 허용
 print(os.environ.get('FRONTEND_HOST'))
-CORS(app, resources={r"/*": {"origins": os.environ.get('FRONTEND_HOST')}})
+CORS(app, resources={r"//*": {"origins": "*"}})
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='localhost', port=8000)
+    app.run(host='0.0.0.0', port='8000')

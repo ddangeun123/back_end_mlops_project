@@ -1,32 +1,20 @@
 import psycopg2
+from dotenv import load_dotenv
 import os
 
-class Config:
-    DB_NAME = os.environ.get('DB_NAME')
-    DB_USER = os.environ.get('DB_USER')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD')
-    DB_HOST = os.environ.get('DB_HOST')
-    DB_PORT = os.environ.get('DB_PORT')
+load_dotenv(verbose=True)
 
-config = Config()
 # 연결 정보
 db_params = {
-    'dbname': config.DB_NAME,
-    'user': config.DB_USER,
-    'password': config.DB_PASSWORD,
-    'host': config.DB_HOST,  # 예: 'localhost' 또는 IP 주소
-    'port': config.DB_PORT  # 예: '5432'
+    'dbname': os.getenv('DB_NAME'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'host': os.getenv('DB_HOST'),  # 예: 'localhost' 또는 IP 주소
+    'port': os.getenv('DB_PORT')  # 예: '5432'
 }
-# testDB
-# db_params = {
-#     'dbname': 'test01',
-#     'user': 'manager',
-#     'password': 'qwer1234',
-#     'host': '127.0.0.1',  # 예: 'localhost' 또는 IP 주소
-#     'port': '5432'  # 예: '5432'
-# }
 
 def db_Connection():
+    print(db_params)
     return psycopg2.connect(**db_params)
 
 def execute_query(query:str):

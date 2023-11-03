@@ -1,11 +1,11 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, sessin
 from werkzeug import security
 from Database.db_manager import db_Connection
 import secrets
 
 app = Blueprint("auth", __name__)
 
-@app.route('/auth/signup', methods=['POST'])
+@app.route('/api/auth/signup', methods=['POST'])
 def SignUp_User():
     data = request.json
 
@@ -23,16 +23,16 @@ def SignUp_User():
         return CreateResponse(True, email, '회원가입 성공')
     except Exception as e:
         print(e)
-    return CreateResponse(False, email, '알 수 없는 오류. 잠시 후 시도해주세요.')
+    return CreateResponse(False, email, '알 수 없는 오류. 잠시 후 >시도해주세요.')
 
-@app.route('/auth/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST'])
 def Login_User():
     data = request.json
 
     email = data.get('email')
     password = data.get('password')
     sessionID = secrets.token_hex(6)
-    
+
     successed, message = ExistUserCheck(email=email, password=password)
     return CreateResponse(success=successed, email=email, message=message)
 
@@ -60,7 +60,7 @@ def UserCheck(email:str):
         return True
     else:
         return False
-    
+
 def ExistUserCheck(email:str, password:str):
     result = GetUser(email=email)
     print(result)
@@ -71,7 +71,6 @@ def ExistUserCheck(email:str, password:str):
             return False, '비밀번호가 일치하지 않습니다.'
     else:
         return False, '가입된 이메일이 존재하지 않습니다.'
-
 
 def UserInsert(email:str, password:str, session_id:str):
     query = """

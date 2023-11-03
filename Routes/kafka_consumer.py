@@ -1,3 +1,4 @@
+import os
 from confluent_kafka import Consumer, KafkaError
 from hdfs import InsecureClient
 import pandas as pd
@@ -14,7 +15,7 @@ def send_data_to_hadoop(df):
     # 예를 들어, HDFS에 저장하거나 Hadoop MapReduce 작업을 실행하는 방식으로 전송 가능
 
     # HDFS에 데이터 저장하는 예제
-    hdfs_client = InsecureClient('http://172.31.3.34:50070')
+    hdfs_client = InsecureClient(os.environ.get('HADOOP_HOST'))
     hdfs_upload_path = f'/home/ubuntu/test/{count}_user_session.csv'
 
     # HDFS에 저장
